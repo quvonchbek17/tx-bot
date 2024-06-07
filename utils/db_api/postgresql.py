@@ -60,9 +60,17 @@ class Database:
         sql = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, fetch=True)
     
+    async def select_user_ids(self):
+        sql = "SELECT chat_id FROM botusers;"
+        return await self.execute(sql, fetch=True)
+    
     async def select_user_attribute(self, chat_id, target):
         sql = f"SELECT {target} from botusers WHERE chat_id={chat_id};"
-        return await self.execute(sql, execute=True)
+        return await self.execute(sql, fetchval=True)
+    
+    async def select_language(self, chat_id):
+        sql = f"SELECT language from botusers WHERE chat_id='{chat_id}';"
+        return await self.execute(sql, fetchval=True)
     
     async def count_users(self):
         sql = "SELECT COUNT(*) FROM botusers"
@@ -150,7 +158,11 @@ class Database:
     
     # commands for botadmins
     async def select_all_botadmins(self):
-        sql = "SELECT * FROM botadmins"
+        sql = "SELECT * FROM botadmins;"
+        return await self.execute(sql, fetch=True)
+    
+    async def select_admin_ids(self):
+        sql = "SELECT chat_id FROM botadmins;"
         return await self.execute(sql, fetch=True)
     
     async def select_botadmin(self, **kwargs):
@@ -158,9 +170,13 @@ class Database:
         sql = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, fetch=True)
     
-    async def add_botadmin(self, chat_id, faculty_id):
+    async def select_admin_lang(self, chat_id):
+        sql = f"SELECT language from botadmins WHERE chat_id='{chat_id}';"
+        return await self.execute(sql, fetchval=True)
+    
+    async def add_botadmin(self, chat_id):
         sql = f"""
-        INSERT INTO botadmins (chat_id, faculty_id) VALUES ({chat_id},'{faculty_id}');
+        INSERT INTO botadmins (chat_id) VALUES ({chat_id});
         """
         return await self.execute(sql, execute=True)
     

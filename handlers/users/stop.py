@@ -16,7 +16,7 @@ trans = Translator()
 async def delete_user(member: types.ChatMemberUpdated, state: FSMContext):
     await state.finish()
     id = member.from_user.id
-    admin_ids = [id[1] for id in await db.select_all_botadmins()]
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if id in admin_ids:
         user = (await db.select_botadmin(chat_id=id))[0]
         await db.delete_botadmin(chat_id=id)

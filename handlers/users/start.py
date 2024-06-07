@@ -17,7 +17,7 @@ trans = Translator()
 @dp.message_handler(CommandStart())
 async def bot_start(message: types.Message):
     # Foydalanuvchini bazaga qo'shish
-    if message.from_user.id in [id[8] for id in await db.select_all_botadmins()]:
+    if message.from_user.id in [record['chat_id'] for record in await db.select_admin_ids()]:
         try:
             await db.delete_user(chat_id=message.from_user.id)
             await db.add_botadmin(message.from_user.id)
@@ -28,7 +28,7 @@ async def bot_start(message: types.Message):
                 msg = f"😎 {message.from_user.full_name} admin sifatida bazaga qo'shildi.\nBazada {count} ta admin bor."
         except:
             msg = None
-        language = (await db.select_botadmin(chat_id=message.from_user.id))[0][5]
+        language = await db.select_admin_lang(message.from_user.id)
         if language is None:
             await message.answer("🇬🇧 Choose language\n🇷🇺 Выберите язык\n🇺🇿 Tilni tanlang", reply_markup=languages)
         else:
@@ -48,7 +48,7 @@ async def bot_start(message: types.Message):
             await db.update_username(chat_id=message.from_user.id, username=message.from_user.username)
         else:
             await db.update_username(chat_id=message.from_user.id, username='')
-        language = (await db.select_user(chat_id=message.from_user.id))[0][5]
+        language = await db.select_language(message.from_user.id)
         if language is None:
             await message.answer("🇬🇧 Choose language\n🇷🇺 Выберите язык\n🇺🇿 Tilni tanlang", reply_markup=languages)
         else:

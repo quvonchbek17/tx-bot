@@ -22,20 +22,20 @@ async def show_settings(msg: Message):
     # text += "Masalan: Aliyev Vali\n(Agar ism familiyangizda "
     # text += "<code>'</code> mana shu tiniq belgisi bor bo'lsa "
     # text += "uning o'rniga bu belgidan foydalaning <code>`</code>)"
-    admin_ids = [id[8] for id in await db.select_all_botadmins()]
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if msg.from_user.id not in admin_ids:
-        lang = (await db.select_user(chat_id=msg.from_user.id))[0][5]
+        lang = await db.select_language(msg.from_user.id)
         await msg.answer(trans.translate(text=text, dest=lang).text,reply_markup=ReplyKeyboardRemove(True))
         await Register.full_name.set()
     else:
-        lang = (await db.select_botadmin(chat_id=msg.from_user.id))[0][5]
+        lang = await db.select_admin_lang(msg.from_user.id)
         await msg.answer(trans.translate(text=text, dest=lang).text,reply_markup=ReplyKeyboardRemove(True))
         await AdminRegister.full_name.set()
     # await msg.edit_reply_markup(reply_markup=ReplyKeyboardRemove(True))
 
 @dp.message_handler(state=Register.full_name)
 async def full_name_handler(msg: Message, state: FSMContext):
-    lang = (await db.select_user(chat_id=msg.from_user.id))[0][5]
+    lang = await db.select_language(msg.from_user.id)
     full_name = msg.text.replace("'","''")
     try:
         await state.update_data(full_name=full_name)
@@ -52,7 +52,7 @@ async def full_name_handler(msg: Message, state: FSMContext):
 
 @dp.message_handler(state=Register.phone_number)
 async def phone_number_handler(msg: Message, state: FSMContext):
-    lang = (await db.select_user(chat_id=msg.from_user.id))[0][5]
+    lang = await db.select_language(msg.from_user.id)
     pattern = "^\+998[0-99]{2}[0-9]{7}$"
     if msg.text == trans.translate(trans.translate('⬅️ Ortga',dest=lang).text,dest=lang).text:
         text = "Iltimos ismingizni va familiyangizni kiriting!\n"
@@ -93,7 +93,7 @@ async def phone_number_handler(msg: Message, state: FSMContext):
 
 @dp.message_handler(state=Register.university)
 async def university_handler(msg: Message, state: FSMContext):
-    lang = (await db.select_user(chat_id=msg.from_user.id))[0][5]
+    lang = await db.select_language(msg.from_user.id)
     university = msg.text.replace("'","''")
     if msg.text == trans.translate('⬅️ Ortga',dest=lang).text:
         await msg.answer(trans.translate("Telefon raqamingizni jo'nating!\nNamuna: +998901234567",dest=lang).text, reply_markup=await back_markup(lang))
@@ -112,7 +112,7 @@ async def university_handler(msg: Message, state: FSMContext):
     
 @dp.message_handler(state=Register.faculty)
 async def set_faculty(msg: Message, state: FSMContext):
-    lang = (await db.select_user(chat_id=msg.from_user.id))[0][5]
+    lang = await db.select_language(msg.from_user.id)
     faculty = msg.text.replace("'","''")
     data = await state.get_data()
     university_id = data.get('university_id')
@@ -133,7 +133,7 @@ async def set_faculty(msg: Message, state: FSMContext):
 
 @dp.message_handler(state=Register.direction)
 async def set_direction(msg: Message, state: FSMContext):
-    lang = (await db.select_user(chat_id=msg.from_user.id))[0][5]
+    lang = await db.select_language(msg.from_user.id)
     direction = msg.text.replace("'","''")
     data = await state.get_data()
     faculty_id = data.get('faculty_id')
@@ -155,7 +155,7 @@ async def set_direction(msg: Message, state: FSMContext):
 
 @dp.message_handler(state=Register.course)
 async def set_course(msg: Message, state: FSMContext):
-    lang = (await db.select_user(chat_id=msg.from_user.id))[0][5]
+    lang = await db.select_language(msg.from_user.id)
     data = await state.get_data()
     faculty_id = data.get('faculty_id')
     if msg.text == trans.translate('⬅️ Ortga',dest=lang).text:
@@ -175,7 +175,7 @@ async def set_course(msg: Message, state: FSMContext):
 
 @dp.message_handler(state=Register.education)
 async def set_education(msg: Message, state: FSMContext):
-    lang = (await db.select_user(chat_id=msg.from_user.id))[0][5]
+    lang = await db.select_language(msg.from_user.id)
     data = await state.get_data()
     faculty_id = data.get('faculty_id')
     course_id = data.get('course_id')
@@ -197,7 +197,7 @@ async def set_education(msg: Message, state: FSMContext):
 
 @dp.message_handler(state=Register.group)
 async def set_group(msg: Message, state: FSMContext):
-    lang = (await db.select_user(chat_id=msg.from_user.id))[0][5]
+    lang = await db.select_language(msg.from_user.id)
     group = msg.text.replace("'","''")
     data = await state.get_data()
     full_name = data.get('full_name')
@@ -219,13 +219,12 @@ async def set_group(msg: Message, state: FSMContext):
                 await db.update_user_phone(chat_id=msg.from_user.id, phone=phone)
             group_id = await db.select_group_id(group, faculty_id, direction_id, course_id, education_id)
             group_id = str(group_id).replace("[<Record id=UUID('",'').replace("')>]",'')
-            await msg.answer(group_id)
             await db.update_user_group_id(msg.from_user.id, group_id)
             await msg.answer(trans.translate("Ma'lumotlaringiz muvaffaqiyatli saqlandi.\nBot haqida ko'proq bilmoqchi bo'lsangiz, /help buyrug'ini bosing.",dest=lang).text)
             await msg.answer(trans.translate("Asosiy menu", dest=lang).text, reply_markup=await main_menu(lang))
             # adminga xabar berish
             user = (await db.select_user(chat_id=msg.from_user.id))[0]
-            admin_ids = [id[8] for id in await db.select_all_botadmins()]
+            admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
             for admin_id in admin_ids:
                 admin_language = (await db.select_botadmin(chat_id=admin_id))[0][5]
                 text = trans.translate(f"➕ {msg.from_user.get_mention(as_html=True)} has been added to the database",dest=admin_language).text + '\n'

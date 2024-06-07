@@ -12,7 +12,7 @@ trans = Translator()
 @dp.message_handler(text = ['📜 About us','📜 Biz haqimizda','📜 О нас'])
 @dp.message_handler(Command("about"))
 async def bot_about(message: types.Message):
-    admin_ids = [id[1] for id in await db.select_all_botadmins()]
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if message.from_user.id in admin_ids:
         lang = (await db.select_botadmin(chat_id=message.from_user.id))[0][5]     
     else:

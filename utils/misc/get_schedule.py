@@ -34,7 +34,6 @@ async def get_schedules(when='Today', group_id=None, day=None, language='en'):
             )
             k += 1
         schedule += "\n********************\n".join(lessons_list)
-        print(schedule)
         return schedule if (len(schedule) > 100) else trans.translate("Jadval topilmadi😔",dest=language).text
     except:
         return trans.translate("Jadval topilmadi😔\nBazadan ma'lumotlarni olishda muammo yuzaga keldi.",dest=language).text
