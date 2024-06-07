@@ -1,0 +1,8 @@
+aiogram==2.21
+# aiohttp==3.8.1
+# aiosignal==1.2.0
+APScheduler==3.9.1
+# async-timeout==4.0.2
+asyncpg==0.26.0
+environs==8.0.0
+googletrans==3.1.0a0
